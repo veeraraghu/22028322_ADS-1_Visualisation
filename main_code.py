@@ -45,6 +45,42 @@ def data_trim_by_date(start_date, end_date, data):
     return new_data
 
 
+def lineplot_daily_close(list_of_dfs, list_of_labels):
+    '''
+    This function will plot line graph of daily close price of the company 
+    stock price.
+
+    Parameters
+    ----------
+    list_of_dfs : LIST
+        List of dataframe names of which the returns distribution to be plot.
+    list_of_labels : LIST
+        List of campany names to use in plot for reference or label.
+
+    Returns
+    -------
+    Plotting of daily close price of the companies.
+
+    '''
+    plt.figure(figsize=(10, 6))
+    for i in range(len(list_of_dfs)):
+        plt.plot(list_of_dfs[i]['Date'], list_of_dfs[i]['Close'],
+                 label=list_of_labels[i])
+    plt.xlabel('Year')
+    plt.ylabel('Daily Close in US$')
+    plt.title('Stock Performance over time')
+    # These dates are the first working days of years from 2013 to 2020
+    # and where our stocks data is recorded.
+    plt.xticks(['2013-01-02', '2014-01-02', '2015-01-02', '2016-01-04',
+                '2017-01-03', '2018-01-02', '2019-01-02', '2020-01-02'],
+               [2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020])
+    plt.legend(loc='upper left')
+    plt.savefig('Stock_Performance_over_time.png')
+    plt.show()
+
+    return
+
+
 def returns(data):
     '''
     This function will create a single column DataFrame with return percentage 
@@ -69,6 +105,50 @@ def returns(data):
     return returns
 
 
+def returns_distribution(list_of_dfs, list_of_labels, list_of_colors):
+    '''
+    This function will plot histogram of daily returns over close price of the 
+    company stock price.
+
+    Parameters
+    ----------
+    list_of_dfs : LIST
+        List of dataframe names of which the returns distribution to be plot.
+    list_of_labels : LIST
+        List of campany names to use in plot for reference or label.
+    list_of_colors : LIST
+        List of colors of which the plots to be shown.
+
+    Returns
+    -------
+    Plotting of daily returns distribution.
+
+    '''
+    plt.figure(figsize=(10, 10))
+    plt.suptitle('Distributions of Daily Returns of each Company', fontsize=20)
+    if len(list_of_dfs) % 2 == 0:
+        x = int(len(list_of_dfs)/2)
+        y = 2
+    if len(list_of_dfs) % 2 == 1:
+        x = int(len(list_of_dfs)/2) + 1
+        y = 2
+
+    for i in range(len(list_of_dfs)):
+        plt.subplot(x, y, i+1)
+        plt.hist(list_of_dfs[i]['Returns'], bins=20, label=list_of_labels[i],
+                 density=True, color=list_of_colors[i])
+        plt.title(list_of_labels[i])
+        plt.xlabel('Returns Percentage Distribution')
+        plt.grid(True)
+        plt.legend()
+
+    plt.tight_layout(pad=1)
+    plt.savefig('Distributions_of_Daily_Returns_of_each_Company.png')
+    plt.show()
+
+    return
+
+
 def volume(data):
     '''
     This function will calculate the total volume of shares sold or traded by 
@@ -91,6 +171,45 @@ def volume(data):
     total_volume = data['Volume'].sum() / 1000000
 
     return total_volume
+
+
+def volume_by_company(list_of_dfs, list_of_labels):
+    '''
+    This function will plot a bar graph of total volume of shares sold or 
+    traded of the company.
+
+    Parameters
+    ----------
+    list_of_dfs : LIST
+        List of dataframe names of which the returns distribution to be plot.
+    list_of_labels : LIST
+        List of campany names to use in plot for reference or label.
+    list_of_colors : LIST
+        List of colors of which the plots to be shown.
+
+    Returns
+    -------
+    Plotting of total volume of shares sold or traded of the company.
+
+    '''
+    # Calculating total volume of shares traded or sold
+    total_volume = []
+    for i in range(len(list_of_dfs)):
+        total_volume.append(volume(list_of_dfs[i]))
+
+    plt.figure(figsize=(10, 6))
+    bars = plt.bar(list_of_labels, total_volume, color='g')
+    plt.xlabel('Company')
+    plt.ylabel('Shares sold/traded in millions')
+    plt.title('Total Volume Shares sold/traded by Company')
+    plt.bar_label(bars)
+    plt.savefig('Total_Volume_Shares_sold_traded_by_Company.png')
+    plt.show()
+
+    print('Most traded stock is ', list_of_labels[np.argmax(total_volume)],
+          ' with ', max(total_volume), ' Millions of shares sold or traded.')
+
+    return
 
 
 # Reading companies stock data
@@ -160,23 +279,9 @@ We can see that all the datasets have same rows and columns
 '''
 
 # Plotting company share performance
-plt.figure(figsize=(10, 6))
-plt.plot(new_amzn['Date'], new_amzn['Close'], label='Amazon')
-plt.plot(new_apple['Date'], new_apple['Close'], label='Apple')
-plt.plot(new_fbook['Date'], new_fbook['Close'], label='Facebook')
-plt.plot(new_google['Date'], new_google['Close'], label='Google')
-plt.plot(new_netflix['Date'], new_netflix['Close'], label='Netflix')
-plt.xlabel('Year')
-plt.ylabel('Daily Close in US$')
-plt.title('Stock Performance over time')
-# These dates are the first working days of years from 2013 to 2020
-# and where our stocks data is recorded.
-plt.xticks(['2013-01-02', '2014-01-02', '2015-01-02', '2016-01-04',
-            '2017-01-03', '2018-01-02', '2019-01-02', '2020-01-02'],
-           [2013, 2014, 2015, 2016, 2017, 2018, 2019, 2020])
-plt.legend(loc='upper left')
-plt.savefig('Stock_Performance_over_time.png')
-plt.show()
+lineplot_daily_close([new_amzn, new_apple, new_fbook, new_google, new_netflix],
+                     ['Amazon', 'Apple', 'Facebook', 'Google', 'Netflix'])
+
 
 '''
 By looking at the line plot,
@@ -191,63 +296,14 @@ new_google['Returns'] = returns(new_google)
 new_netflix['Returns'] = returns(new_netflix)
 
 # Plotting distributions of return percentage of each company
-plt.figure(figsize=(10, 10))
-plt.suptitle('Distributions of Daily Returns of each Company', fontsize=20)
-plt.subplot(3, 2, 1)
-plt.hist(new_amzn['Returns'], bins=20, label='Amazon',
-         density=True, color='c')
-plt.title('Amazon')
-plt.xlabel('Returns Percentage Distribution')
-plt.grid(True)
-plt.legend()
-plt.subplot(3, 2, 2)
-plt.hist(new_apple['Returns'], bins=20, label='Apple',
-         density=True, color='g')
-plt.title('Apple')
-plt.xlabel('Returns Percentage Distribution')
-plt.grid(True)
-plt.legend()
-plt.subplot(3, 2, 3)
-plt.hist(new_fbook['Returns'], bins=20, label='Facebook',
-         density=True, color='b')
-plt.title('Facebook')
-plt.xlabel('Returns Percentage Distribution')
-plt.grid(True)
-plt.legend()
-plt.subplot(3, 2, 4)
-plt.hist(new_google['Returns'], bins=20, label='Google',
-         density=True, color='m')
-plt.title('Google')
-plt.xlabel('Returns Percentage Distribution')
-plt.grid(True)
-plt.legend()
-plt.subplot(3, 2, 5)
-plt.hist(new_netflix['Returns'], bins=20, label='Netflix',
-         density=True, color='r')
-plt.title('Netflix')
-plt.xlabel('Returns Percentage Distribution')
-plt.grid(True)
-plt.legend()
-plt.tight_layout(pad=1)
-plt.savefig('Distributions_of_Daily_Returns_of_each_Company.png')
-plt.show()
+returns_distribution([new_amzn, new_apple, new_fbook, new_google, new_netflix],
+                     ['Amazon', 'Apple', 'Facebook', 'Google', 'Netflix'],
+                     ['c', 'g', 'b', 'm', 'r'])
+
 
 print('All stocks have a 50% - 60% chance of daily profit')
 
-# Calculating total volume of shares traded or sold
-total_volume = [volume(new_amzn), volume(new_apple), volume(new_fbook),
-                volume(new_google), volume(new_netflix)]
-companies = ['Amazon', 'Apple', 'Facebook', 'Google', 'Netflix']
 
 # Plotting total volume of shares over company in millions
-plt.figure(figsize=(10, 6))
-bars = plt.bar(companies, total_volume, color='g')
-plt.xlabel('Company')
-plt.ylabel('Shares sold/traded in millions')
-plt.title('Total Volume Shares sold/traded by Company')
-plt.bar_label(bars)
-plt.savefig('Total_Volume_Shares_sold_traded_by_Company.png')
-plt.show()
-
-print('Most traded stock is ', companies[np.argmax(total_volume)], ' with ',
-      max(total_volume), ' Millions of shares sold or traded.')
+volume_by_company([new_amzn, new_apple, new_fbook, new_google, new_netflix],
+                  ['Amazon', 'Apple', 'Facebook', 'Google', 'Netflix'])
