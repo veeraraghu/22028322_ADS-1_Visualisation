@@ -208,7 +208,7 @@ def volume_by_company(list_of_dfs, list_of_labels):
 
     print('Most traded stock is ', list_of_labels[np.argmax(total_volume)],
           ' with ', max(total_volume), ' Millions of shares sold or traded.')
-
+    
     return
 
 
